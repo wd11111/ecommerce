@@ -1,0 +1,133 @@
+apiVersion: networking.k8s.io/v1
+kind: NetworkPolicy
+metadata:
+  name: default-deny-all
+  namespace: ecommerce-prod
+spec:
+  podSelector: {}
+  policyTypes:
+    - Ingress
+---
+# Allow Ingress Controller to talk to API Gateway
+apiVersion: networking.k8s.io/v1
+kind: NetworkPolicy
+metadata:
+  name: allow-ingress-to-gateway
+  namespace: ecommerce-prod
+spec:
+  podSelector:
+    matchLabels:
+      app: api-gateway
+  policyTypes:
+    - Ingress
+  ingress:
+    - from:
+        - namespaceSelector:
+            matchLabels:
+              name: ingress-nginx # Assuming ingress controller is in a labeled namespace
+    - ports:
+        - protocol: TCP
+          port: 8080
+---
+# Allow API Gateway to talk to other services
+apiVersion: networking.k8s.io/v1
+kind: NetworkPolicy
+metadata:
+  name: allow-gateway-to-services
+  namespace: ecommerce-prod
+spec:
+  podSelector:
+    matchLabels:
+      app: api-gateway # Actually this regulates INGRESS to gateway, wait.
+      # We want to allow traffic FROM gateway TO services.
+      # So we need a policy on the TARGET pods.
+  policyTypes:
+    - Ingress # No, this policy is attached to gateway? No.
+---
+# Allow traffic from API Gateway to Microservices
+apiVersion: networking.k8s.io/v1
+kind: NetworkPolicy
+metadata:
+  name: allow-from-gateway
+  namespace: ecommerce-prod
+spec:
+  podSelector:
+    matchExpressions:
+      - key: app
+        operator: In
+        values: [identity-service, product-service, cart-service]
+  policyTypes:
+    - Ingress
+  ingress:
+    - from:
+        - podSelector:
+            matchLabels:
+              app: api-gateway
+    - ports:
+        - protocol: TCP
+          port: 8081
+        - protocol: TCP
+          port: 8082
+        - protocol: TCP
+          port: 8083
+---
+# Allow traffic to Postgres from Microservices
+apiVersion: networking.k8s.io/v1
+kind: NetworkPolicy
+metadata:
+  name: allow-db-access
+  namespace: ecommerce-prod
+spec:
+  podSelector:
+    matchLabels:
+      app: postgres
+  policyTypes:
+    - Ingress
+  ingress:
+    - from:
+        - podSelector:
+            matchExpressions:
+              - key: app
+                operator: In
+                values: [identity-service, product-service, cart-service]
+    - ports:
+        - protocol: TCP
+          port: 5432
+---
+# Allow traffic to Discovery Service from all in namespace
+apiVersion: networking.k8s.io/v1
+kind: NetworkPolicy
+metadata:
+  name: allow-discovery-access
+  namespace: ecommerce-prod
+spec:
+  podSelector:
+    matchLabels:
+      app: discovery-service
+  policyTypes:
+    - Ingress
+  ingress:
+    - from:
+        - podSelector: {} # Allow all pods in this namespace
+    - ports:
+        - protocol: TCP
+          port: 8761
+---
+# Allow traffic to Config Server from all in namespace
+apiVersion: networking.k8s.io/v1
+kind: NetworkPolicy
+metadata:
+  name: allow-config-access
+  namespace: ecommerce-prod
+spec:
+  podSelector:
+    matchLabels:
+      app: config-server
+  policyTypes:
+    - Ingress
+  ingress:
+    - from:
+        - podSelector: {}
+    - ports:
+        - protocol: TCP
+          port: 8888
