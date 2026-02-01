@@ -7,11 +7,10 @@ metadata:
     kubernetes.io/ingress.class: "nginx"
     nginx.ingress.kubernetes.io/ssl-redirect: "true"
     nginx.ingress.kubernetes.io/force-ssl-redirect: "true"
-    nginx.ingress.kubernetes.io/limit-rps: "10" # Rate limiting
+    nginx.ingress.kubernetes.io/limit-rps: "10"
     nginx.ingress.kubernetes.io/proxy-body-size: "10m"
-    nginx.ingress.kubernetes.io/proxy-read-timeout: "3600"
-    nginx.ingress.kubernetes.io/proxy-send-timeout: "3600"
-    # Assuming TLS termination at LB, but let's configure basic TLS
+    nginx.ingress.kubernetes.io/proxy-read-timeout: "60"
+    nginx.ingress.kubernetes.io/proxy-send-timeout: "60"
 spec:
   tls:
     - hosts:
@@ -21,10 +20,34 @@ spec:
     - host: ecommerce.example.com
       http:
         paths:
-          - path: /
+          # Identity Service - Authentication endpoints
+          - path: /api/auth
             pathType: Prefix
             backend:
               service:
-                name: api-gateway
+                name: identity-service
                 port:
-                  number: 8080
+                  number: 8081
+          # Product Service - Products and Categories
+          - path: /api/products
+            pathType: Prefix
+            backend:
+              service:
+                name: product-service
+                port:
+                  number: 8082
+          - path: /api/categories
+            pathType: Prefix
+            backend:
+              service:
+                name: product-service
+                port:
+                  number: 8082
+          # Cart Service
+          - path: /api/cart
+            pathType: Prefix
+            backend:
+              service:
+                name: cart-service
+                port:
+                  number: 8083

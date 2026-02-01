@@ -23,9 +23,6 @@ spec:
         - name: config-server
           image: ecommerce/config-server:latest
           imagePullPolicy: IfNotPresent
-          env:
-            - name: EUREKA_CLIENT_SERVICEURL_DEFAULTZONE
-              value: http://discovery-service:8761/eureka/
           ports:
             - containerPort: 8888
           resources:

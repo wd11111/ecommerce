@@ -34,9 +34,7 @@ spec:
             - containerPort: 8081
           env:
             - name: SPRING_PROFILES_ACTIVE
-              value: prod
-            - name: EUREKA_CLIENT_SERVICEURL_DEFAULTZONE
-              value: http://discovery-service:8761/eureka/
+              value: kubernetes
             - name: SPRING_DATASOURCE_URL
               value: jdbc:postgresql://postgres.ecommerce-prod.svc.cluster.local:5432/identity_db
             - name: SPRING_DATASOURCE_USERNAME

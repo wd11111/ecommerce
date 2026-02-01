@@ -22,9 +22,7 @@
 
     <modules>
         <module>monolith</module>
-        <module>microservices/discovery-service</module>
         <module>microservices/config-server</module>
-        <module>microservices/api-gateway</module>
         <module>microservices/identity-service</module>
         <module>microservices/product-service</module>
         <module>microservices/cart-service</module>
